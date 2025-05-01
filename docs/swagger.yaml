@@ -1,0 +1,247 @@
+basePath: /api
+definitions:
+  dto.CreatePersonRequest:
+    properties:
+      name:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+    required:
+    - name
+    - surname
+    type: object
+  dto.UpdatePersonRequest:
+    properties:
+      name:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+    type: object
+  model.Person:
+    properties:
+      age:
+        type: integer
+      gender:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      nationality:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample API for enriching personal data using external APIs
+  title: Effective Mobile API
+  version: "0.1"
+paths:
+  /persons:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all persons with optional filters, sorting, and pagination
+      parameters:
+      - in: query
+        name: age_max
+        type: integer
+      - in: query
+        name: age_min
+        type: integer
+      - in: query
+        name: gender
+        type: string
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: name
+        type: string
+      - in: query
+        name: nationality
+        type: string
+      - in: query
+        name: offset
+        type: integer
+      - in: query
+        name: order
+        type: string
+      - in: query
+        name: patronymic
+        type: string
+      - in: query
+        name: sort_by
+        type: string
+      - in: query
+        name: surname
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of persons
+          schema:
+            items:
+              $ref: '#/definitions/model.Person'
+            type: array
+        "400":
+          description: Invalid query parameters
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all persons with filters
+      tags:
+      - Person
+    post:
+      consumes:
+      - application/json
+      description: Create a new person with enriched data
+      parameters:
+      - description: Create person request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePersonRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created person
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new person
+      tags:
+      - Person
+  /persons/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a person by their ID
+      parameters:
+      - description: Person ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Successfully deleted person
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a person by ID
+      tags:
+      - Person
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a person by their ID
+      parameters:
+      - description: Person ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved person
+          schema:
+            $ref: '#/definitions/model.Person'
+        "400":
+          description: Invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Person not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a person by ID
+      tags:
+      - Person
+    put:
+      consumes:
+      - application/json
+      description: Update an existing person by their ID
+      parameters:
+      - description: Person ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update person request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePersonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated person
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid ID or input
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a person by ID
+      tags:
+      - Person
+schemes:
+- http
+swagger: "2.0"
