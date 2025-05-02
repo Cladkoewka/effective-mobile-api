@@ -141,8 +141,8 @@ API для получения данных о людях (пол, возраст
 
   ```json
   {
-      "name": "Dmitriy",
-      "surname": "Ushakov",
+      "name": "Dmitriy",  // необязательно
+      "surname": "Ushakov",  // необязательно
       "patronymic": "Vasilevich"  // необязательно
   }
   ```
