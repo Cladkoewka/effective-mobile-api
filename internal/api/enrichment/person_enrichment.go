@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Cladkoewka/effective-mobile-api/internal/logger"
 	"github.com/Cladkoewka/effective-mobile-api/internal/model"
 	"net/http"
 	"time"
@@ -33,13 +34,18 @@ func NewHTTPEnrichmentClient() *HTTPEnrichmentClient {
 func (c *HTTPEnrichmentClient) Enrich(ctx context.Context, name string) (*model.EnrichmentResult, error) {
 	result := &model.EnrichmentResult{}
 
+	logger.Log.Info("Enriching person data", "name", name)
+
 	if err := c.enrichAge(ctx, name, result); err != nil {
+		logger.Log.Error("Error enriching age", "name", name, "error", err)
 		return nil, fmt.Errorf("age enrichment failed: %w", err)
 	}
 	if err := c.enrichGender(ctx, name, result); err != nil {
+		logger.Log.Error("Error enriching gender", "name", name, "error", err)
 		return nil, fmt.Errorf("gender enrichment failed: %w", err)
 	}
 	if err := c.enrichNationality(ctx, name, result); err != nil {
+		logger.Log.Error("Error enriching nationality", "name", name, "error", err)
 		return nil, fmt.Errorf("nationality enrichment failed: %w", err)
 	}
 

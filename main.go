@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
 	"flag"
+	"fmt"
+	"os"
 
 	_ "github.com/Cladkoewka/effective-mobile-api/docs"
 	"github.com/Cladkoewka/effective-mobile-api/internal/api/enrichment"
 	"github.com/Cladkoewka/effective-mobile-api/internal/config"
 	"github.com/Cladkoewka/effective-mobile-api/internal/handler"
+	"github.com/Cladkoewka/effective-mobile-api/internal/logger"
 	"github.com/Cladkoewka/effective-mobile-api/internal/repository"
 	"github.com/Cladkoewka/effective-mobile-api/internal/service"
 	"github.com/gin-gonic/gin"
@@ -20,18 +20,22 @@ import (
 )
 
 func main() {
+	logger.InitLogger()
+
 	migrateFlag := flag.Bool("migrate", false, "Run database migrations")
 	flag.Parse()
 
-	cfg := initConfig()
+	logger.Log.Info("Starting application")
 
+	cfg := initConfig()
 	db := initDatabase(cfg)
 
 	if *migrateFlag {
+		logger.Log.Info("Running database migration")
 		if err := runMigration(db, "migrations/001_init.sql"); err != nil {
-			log.Fatalf("Migration failed: %v", err)
+			logger.Log.Error("Migration failed", "error", err)
 		}
-		log.Println("Migration completed successfully")
+		logger.Log.Info("Migration completed successfully")
 	}
 
 	runServer(db, cfg)
@@ -40,7 +44,7 @@ func main() {
 func initConfig() *config.Config {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("Error loading config: %v", err)
+		logger.Log.Error("Error loading config", "error", err)
 	}
 	return cfg
 }
@@ -49,13 +53,13 @@ func initDatabase(cfg *config.Config) *sqlx.DB {
 	db, err := sqlx.Connect("postgres",
 		"postgres://"+cfg.DBUser+":"+cfg.DBPassword+"@"+cfg.DBHost+":"+cfg.DBPort+"/"+cfg.DBName+"?sslmode=disable")
 	if err != nil {
-		log.Fatalf("Error connecting to the database: %v", err)
+		logger.Log.Error("Error connecting to the database", "error", err)
 	}
 	return db
 }
 
 func runMigration(db *sqlx.DB, filePath string) error {
-	sqlBytes, err := ioutil.ReadFile(filePath)
+	sqlBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("error reading migration file: %w", err)
 	}
@@ -65,7 +69,7 @@ func runMigration(db *sqlx.DB, filePath string) error {
 		return fmt.Errorf("error executing migration: %w", err)
 	}
 
-	log.Printf("Migration applied from file: %s", filePath)
+	logger.Log.Info("Migration applied from file", "file", filePath)
 	return nil
 }
 
@@ -82,8 +86,8 @@ func runServer(db *sqlx.DB, cfg *config.Config) {
 	api := r.Group("/api")
 	personHandler.RegisterRoutes(api)
 
-	log.Printf("Server starting on port %s...", cfg.Port)
+	logger.Log.Info("Server starting", "port", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
-		log.Fatalf("Error starting the server: %v", err)
+		logger.Log.Error("Error starting the server", "error", err)
 	}
 }

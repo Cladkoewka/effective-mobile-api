@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"log"
 	"fmt"
+	"log"
 
 	"github.com/Cladkoewka/effective-mobile-api/internal/model"
 	"github.com/jmoiron/sqlx"
@@ -19,36 +19,28 @@ func NewPersonRepository(db *sqlx.DB) *PersonRepository {
 func (r *PersonRepository) GetAll(f *model.PersonFilter) ([]model.Person, error) {
 	var persons []model.Person
 	query := `SELECT * FROM persons WHERE 1=1`
-	args := []interface{}{}
 
 	// filtration
 	if f.Name != nil {
-		query += "AND name ILIKE ?"
-		args = append(args, "%"+*f.Name+"%")
+		query += fmt.Sprintf(" AND name ILIKE '%%%s%%'", *f.Name)
 	}
 	if f.Surname != nil {
-		query += " AND surname ILIKE ?"
-		args = append(args, "%"+*f.Surname+"%")
+		query += fmt.Sprintf(" AND surname ILIKE '%%%s%%'", *f.Surname)
 	}
 	if f.Patronymic != nil {
-		query += " AND patronymic ILIKE ?"
-		args = append(args, "%"+*f.Patronymic+"%")
+		query += fmt.Sprintf(" AND patronymic ILIKE '%%%s%%'", *f.Patronymic)
 	}
 	if f.Gender != nil {
-		query += " AND gender = ?"
-		args = append(args, *f.Gender)
+		query += fmt.Sprintf(" AND gender ILIKE '%%%s%%'", *f.Gender)
 	}
 	if f.Nationality != nil {
-		query += " AND nationality = ?"
-		args = append(args, *f.Nationality)
+		query += fmt.Sprintf(" AND nationality ILIKE '%%%s%%'", *f.Nationality)
 	}
 	if f.AgeMin != nil {
-		query += " AND age >= ?"
-		args = append(args, *f.AgeMin)
+		query += fmt.Sprintf(" AND age >= %d", *f.AgeMin)
 	}
 	if f.AgeMax != nil {
-		query += " AND age <= ?"
-		args = append(args, *f.AgeMax)
+		query += fmt.Sprintf(" AND age <= %d", *f.AgeMax)
 	}
 
 	// sorting
@@ -57,12 +49,12 @@ func (r *PersonRepository) GetAll(f *model.PersonFilter) ([]model.Person, error)
 	// pagination
 	query += fmt.Sprintf(" LIMIT %d OFFSET %d", f.Limit, f.Offset)
 
-	log.Printf("Filter %#v\n", f)
-	log.Println("Get All Query:", query)
+	log.Println("Query: ", query)
 
-	err := r.db.Select(&persons, query, args...)
+	err := r.db.Select(&persons, query)
 	return persons, err
 }
+
 
 func (r *PersonRepository) GetByID(id uint64) (*model.Person, error) {
 	var person model.Person

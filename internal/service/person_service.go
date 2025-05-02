@@ -23,21 +23,12 @@ func (s *PersonService) GetByID(id uint64) (*model.Person, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *PersonService) GetAll(resp *dto.GetPersonRequest) ([]model.Person, error) {
-	filter := &model.PersonFilter{
-		Name:        resp.Name,
-		Surname:     resp.Surname,
-		Patronymic:  resp.Patronymic,
-		Gender:      resp.Gender,
-		Nationality: resp.Nationality,
-		AgeMin:      resp.AgeMin,
-		AgeMax:      resp.AgeMax,
-		Limit:       resp.Limit,
-		Offset:      resp.Offset,
-		SortBy:      resp.SortBy,
-		Order:       resp.Order,
+func (s *PersonService) GetAll(req *dto.GetPersonRequest) ([]model.Person, error) {
+	if err := validateGetPersonRequest(req); err != nil {
+		return nil, err
 	}
 
+	filter := mapGetPersonRequestToFilter(req)
 	return s.repo.GetAll(filter)
 }
 
@@ -84,4 +75,53 @@ func (s *PersonService) Update(id uint64, req *dto.UpdatePersonRequest) error {
 
 func (s *PersonService) Delete(id uint64) error {
 	return s.repo.Delete(id)
+}
+
+func validateGetPersonRequest(req *dto.GetPersonRequest) error {
+	allowedSortBy := map[string]bool{
+		"id": true, "name": true, "surname": true, "patronymic": true,
+		"gender": true, "nationality": true, "age": true,
+	}
+	if !allowedSortBy[req.SortBy] {
+		return fmt.Errorf("invalid sort_by field: %s", req.SortBy)
+	}
+
+	if req.Order != "asc" && req.Order != "desc" {
+		return fmt.Errorf("invalid order value: %s (must be 'asc' or 'desc')", req.Order)
+	}
+
+	if req.Limit < 1 || req.Limit > 100 {
+		return fmt.Errorf("limit must be between 1 and 100")
+	}
+	if req.Offset < 0 {
+		return fmt.Errorf("offset must be 0 or greater")
+	}
+
+	if req.AgeMin != nil && *req.AgeMin < 0 {
+		return fmt.Errorf("age_min must be non-negative")
+	}
+	if req.AgeMax != nil && *req.AgeMax < 0 {
+		return fmt.Errorf("age_max must be non-negative")
+	}
+	if req.AgeMin != nil && req.AgeMax != nil && *req.AgeMin > *req.AgeMax {
+		return fmt.Errorf("age_min cannot be greater than age_max")
+	}
+
+	return nil
+}
+
+func mapGetPersonRequestToFilter(req *dto.GetPersonRequest) *model.PersonFilter {
+	return &model.PersonFilter{
+		Name:        req.Name,
+		Surname:     req.Surname,
+		Patronymic:  req.Patronymic,
+		Gender:      req.Gender,
+		Nationality: req.Nationality,
+		AgeMin:      req.AgeMin,
+		AgeMax:      req.AgeMax,
+		Limit:       req.Limit,
+		Offset:      req.Offset,
+		SortBy:      req.SortBy,
+		Order:       req.Order,
+	}
 }
